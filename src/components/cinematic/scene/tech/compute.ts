@@ -155,9 +155,10 @@ export const LAYERS = [8, 10, 10, 6, 3]
  */
 export function networkLayout() {
   const layers: Vector3[][] = LAYERS.map((size, l) => {
-    const z = -3.8 - (6.4 * l) / (LAYERS.length - 1)
-    const h = size === 3 ? 0.9 : 1.9
-    return Array.from({ length: size }, (_, i) => new Vector3(0, 1.25 - h / 2 + (h * (i + 0.5)) / size, z))
+    // compact (4 m deep, 1.6 m tall) and level with the car's shoulder: it complements the car instead of out-sizing it
+    const z = -3.4 - (4.0 * l) / (LAYERS.length - 1)
+    const h = size === 3 ? 0.75 : 1.6
+    return Array.from({ length: size }, (_, i) => new Vector3(0, 1.35 - h / 2 + (h * (i + 0.5)) / size, z))
   })
   return layers
 }

@@ -9,7 +9,7 @@ import { S } from '../../lib/state'
  *
  * One paused GSAP timeline, 100 units long, scrubbed by a single ScrollTrigger
  * across the sticky story section. Camera, lighting, every real-time scene,
- * world speed, audio mix and every caption live on this one timeline, so they
+ * world speed and every caption live on this one timeline, so they
  * can never drift apart — and scrolling back up plays it all in reverse.
  *
  * Shot list (story units):
@@ -52,7 +52,6 @@ export function buildStoryTimeline(trigger: HTMLElement, dom: TimelineDom, opts:
 
   const cam = (at: number, dur: number, to: Cam, ease = 'power2.inOut') => tl.to(S.cam, { ...to, duration: dur, ease }, at)
   const to = (at: number, dur: number, vars: gsap.TweenVars, ease = 'power1.inOut') => tl.to(S, { ...vars, duration: dur, ease }, at)
-  const mix = (at: number, dur: number, vars: Partial<typeof S.mix>, ease = 'power1.inOut') => tl.to(S.mix, { ...vars, duration: dur, ease }, at)
   const set = (at: number, vars: gsap.TweenVars) => tl.set(S, vars, at)
   const setCam = (at: number, vars: Cam) => tl.set(S.cam, vars, at)
   const tech = (at: number, dur: number, vars: Partial<typeof S.tech>, ease = 'power1.inOut') => tl.to(S.tech, { ...vars, duration: dur, ease }, at)
@@ -74,14 +73,11 @@ export function buildStoryTimeline(trigger: HTMLElement, dom: TimelineDom, opts:
   to(7.6, 8, { shards: 1 }, 'power1.inOut')
   cam(8, 7.5, { px: 3.7, py: 2.05, pz: m ? 7.6 : 6.4, tx: 0, ty: 0.72, tz: 0, fov: 32 })
   to(8, 7, { keyLight: 0.6 })
-  mix(8, 7, { rpm: 0.16, engine: 0.5 })
 
   /* ── 15.5–21 · THE MACHINE: CLOSE-UPS ────────────────────────── */
   dip(16, () => setCam(16, { px: 1.72, py: 0.84, pz: -3.62, tx: 0.42, ty: 0.7, tz: -2.3, fov: 28 }), 0.4)
   cam(16, 2.6, { px: 1.5, py: 0.8, pz: -3.3 }, 'power1.out')
   to(16.5, 1.2, { headlights: 1 }, 'power2.in')
-  mix(16.5, 1, { rpm: 0.3 }, 'power2.out')
-  mix(17.5, 1.5, { rpm: 0.15 })
   dip(18.7, () => setCam(18.7, { px: 2.25, py: 0.96, pz: -1.4, tx: 0.8, ty: 0.86, tz: -0.4, fov: 30 }), 0.35)
   cam(18.7, 3, { px: 2.3, py: 1.04, pz: 1.5, tx: 0.82, ty: 0.86, tz: 2.1 }, 'power1.inOut')
   to(18.7, 3, { sweep: 1 }, 'power1.inOut')
@@ -119,7 +115,6 @@ export function buildStoryTimeline(trigger: HTMLElement, dom: TimelineDom, opts:
   tech(37.2, 1.4, { xray: 0.74 })
   cam(37, 3, { px: m ? 6.6 : 5.6, py: 2.4, pz: m ? -6.2 : -5.2, tx: 0, ty: 0.7, tz: 0, fov: 31 })
   tech(39.4, 1, { xray: 1 })
-  mix(36, 4, { engine: 0.25, future: 0.25 })
 
   /* ── 40–50 · COMPUTER SCIENCE ────────────────────────────────────
      DATA STRUCTURES: the samples snap into an ordered spatial map of the car.
@@ -134,13 +129,12 @@ export function buildStoryTimeline(trigger: HTMLElement, dom: TimelineDom, opts:
   tech(45.4, 3, { search: 1 }, 'none')
   tech(48.2, 1.6, { solve: 1 })
   cam(41, 9, { px: m ? 7.0 : 5.9, py: 3.0, pz: m ? -5.2 : -4.2, tx: 0, ty: 0.6, tz: 0.2, fov: 32 }, 'power1.inOut')
-  mix(42, 6, { engine: 0.05, rpm: 0.12, future: 0.5 })
 
   /* ── 50–61 · MACHINE LEARNING ────────────────────────────────────
      Raw signals (noisy samples) → features (k-means clusters) → a model that
      activates layer by layer and keeps its strong connections → a prediction
      projected ahead of the nose, with its uncertainty. */
-  tech(50, 1.2, { search: 0, solve: 0, nodes: 0, voxel: 0, points: 1, edges: 0.4 })
+  tech(50, 1.2, { search: 0, solve: 0, nodes: 0, voxel: 0, points: 1, edges: 0.55 })
   tech(50.4, 1.6, { raw: 1 })
   tech(52, 2.2, { raw: 0, cluster: 1 }, 'power2.inOut')
   tech(54.2, 3.8, { model: 1 }, 'none')
@@ -148,8 +142,10 @@ export function buildStoryTimeline(trigger: HTMLElement, dom: TimelineDom, opts:
   tech(57.8, 1.2, { points: 0.35 })
   tech(58.6, 2.2, { predict: 1, fan: 1 }, 'power1.inOut')
   // side on: the car at left, the model on the road ahead, the prediction beyond — one reading direction
-  // (portrait: from behind and above, so the chain car → model → road recedes in depth instead of running sideways)
-  cam(50, 3, m ? { px: 3.4, py: 4.6, pz: 7.2, tx: 0, ty: 0.9, tz: -5.2, fov: 40 } : { px: 15.5, py: 2.2, pz: -3.8, tx: 0, ty: 1.0, tz: -3.8, fov: 38 })
+  // A rear three-quarter: the car large in the foreground, its features on its body, the model receding
+  // ahead of the nose in depth — then a slow dolly across the chapter for parallax between car and data.
+  cam(50, 3, m ? { px: 3.6, py: 3.4, pz: 8.6, tx: 0, ty: 1.05, tz: -2.4, fov: 44 } : { px: 6.6, py: 2.05, pz: 5.9, tx: 0, ty: 0.95, tz: -2.0, fov: 34 })
+  cam(53, 5.2, m ? { px: 4.0, py: 3.6, pz: 7.8, tx: 0, ty: 1.1, tz: -2.9 } : { px: 7.3, py: 2.3, pz: 5.2, tx: 0, ty: 1.0, tz: -2.6 }, 'power1.inOut')
   cam(58.4, 2.6, { px: m ? 14 : 11.5, py: 6.2, pz: m ? -5 : -4.4, tx: 0.6, ty: 0.4, tz: -9.5, fov: 40 })
 
   /* ── 61–69 · COMPUTER VISION ─────────────────────────────────────
@@ -194,9 +190,11 @@ export function buildStoryTimeline(trigger: HTMLElement, dom: TimelineDom, opts:
   tech(85.2, 0.6, { scanOn: 0, edges: 0.22, nodes: 0.5 })
   tech(83, 4.8, { net: 1 }, 'none')
   tech(87.4, 2, { netPulse: 1 })
-  cam(82, 3.4, hero)
-  cam(85.6, 4.6, { px: m ? 11 : 9.2, py: 3.4, pz: m ? -11 : -9.4, tx: 0, ty: 1.9, tz: 0, fov: 34 })
-  mix(82, 3, { engine: 0.35, future: 0.6 })
+  // the hero framing, with the car shifted right of centre on wide screens: the lower left stays free for the platform line
+  cam(82, 3.4, m ? hero : { ...hero, tx: 0.9, tz: 0.85 })
+  // the scan done, the camera rises and pulls back: the car settles into the lower third (looking above it),
+  // opening the negative space the headline will occupy — settled by 87, before the headline peaks
+  cam(85.4, 1.8, m ? { px: 11.2, py: 5.1, pz: -11.6, tx: 0, ty: 3.35, tz: 0, fov: 40 } : { px: 9.0, py: 4.0, pz: -9.2, tx: 0, ty: 2.75, tz: 0, fov: 34 }, 'power2.inOut')
 
   /* ── 91–96 · THE GRID: YOU ARE PART OF THE SYSTEM ────────────────
      The network reaches out into a vast grid; selected nodes light and
@@ -211,12 +209,10 @@ export function buildStoryTimeline(trigger: HTMLElement, dom: TimelineDom, opts:
   tech(91.8, 5.6, { gridNet: 1 }, 'none')
   cam(91.2, 6.6, { px: 0, py: 2.4, pz: -60, tx: 0, ty: 2.2, tz: -150, fov: 40 }, 'power1.inOut')
   tech(93, 4, { gridPulse: 1 }, 'power1.in')
-  mix(91.4, 5, { future: 1, engine: 0, road: 0, rpm: 0.4 })
   cam(96.6, 3.4, { px: 0, py: 3.8, pz: -68, tx: 0, ty: 3.6, tz: -160, fov: 42 })
 
   /* ── 96–100 · THE HACKATHON ───────────────────────────────────── */
   to(95.6, 3, { dim: 0.72 }, 'power1.inOut')
-  mix(96, 4, { future: 0.45 })
   // the grid's last line of light opens across the frame, and the title resolves out of it
   if (dom.line) {
     tl.fromTo(dom.line, { autoAlpha: 0, scaleX: 0 }, { autoAlpha: 1, scaleX: 1, duration: 1.4, ease: 'power3.inOut' }, 95.4)

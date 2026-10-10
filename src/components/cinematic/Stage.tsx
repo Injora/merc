@@ -12,6 +12,7 @@ import { Ignition } from './scene/Ignition'
 import { createMaterials } from './scene/materials'
 import { SceneContext, useScene, type SceneShared } from './scene/SceneContext'
 import { probeFrame } from '../../lib/probe'
+import { NO, gpuBegin, gpuEnd } from '../../lib/gpuprof'
 import { Shards } from './scene/Shards'
 import { StudioEnvironment } from './scene/StudioEnvironment'
 import { StudioSet } from './scene/StudioSet'
@@ -29,7 +30,7 @@ import { World } from './scene/tech/World'
 export default function Stage({ tier, active, onContextLost }: { tier: Tier; active: boolean; onContextLost: () => void }) {
   const [dprMax, setDprMax] = useState(tier === 'high' ? 1.75 : 1.25)
   // decided once, by device tier — never toggled while the film runs (see PerformanceMonitor below)
-  const effects = tier === 'high'
+  const effects = tier === 'high' && !NO.has('fx')
 
   const shared = useMemo<SceneShared>(
     () => ({ tier, materials: createMaterials(), emblemParts: { arms: [], ring: null }, vehicle: { root: null } }),
@@ -46,6 +47,9 @@ export default function Stage({ tier, active, onContextLost }: { tier: Tier; act
       camera={{ fov: 35, near: 0.02, far: 1000, position: [0, 1.15, 4.5] }}
       onCreated={({ gl, scene }) => {
         gl.localClippingEnabled = true
+        // The car's glass refracts a half-resolution copy of the scene: measured (scripts/gpu-range.mjs)
+        // at −6 to −8 ms GPU per frame in the studio, visually equivalent through dark tinted glass.
+        gl.transmissionResolutionScale = NO.has('txhalf') ? 1 : 0.5 // ?no=txhalf restores the old full-res pass, for before/after profiling
         if (import.meta.env.DEV) Object.assign(window, { __gl: gl, __scene: scene })
         gl.toneMapping = ACESFilmicToneMapping
         gl.outputColorSpace = SRGBColorSpace
@@ -99,6 +103,7 @@ export default function Stage({ tier, active, onContextLost }: { tier: Tier; act
 const WARM_KEYS = ['studio', 'road', 'shards', 'digital', 'headlights', 'sky', 'revealed', 'morph'] as const
 const WARM_STEPS: Partial<Record<(typeof WARM_KEYS)[number], number>>[] = [
   { studio: 1, revealed: 1, morph: 1, shards: 0.99, road: 1, sky: 1, headlights: 1 },
+  {}, // hold the formed car two more frames: the contact shadow is baked from it (StudioSet)
   { studio: 0, shards: 0, sky: 2, digital: 0.6 },
 ]
 /** every technical layer on at once for the warm-up (the X-ray state compiles the car's dissolve path too) */
@@ -171,7 +176,9 @@ function TickerDriver({ active }: { active: boolean }) {
   useEffect(() => {
     if (!active) return
     const tick = () => {
+      gpuBegin(gl.getContext() as WebGL2RenderingContext) // no-op unless ?gpu
       advance(performance.now())
+      gpuEnd()
       probeFrame(gl, emblemParts.root, camera) // no-op unless ?probe
     }
     gsap.ticker.add(tick)
