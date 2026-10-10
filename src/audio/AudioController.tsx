@@ -9,7 +9,7 @@ import { audio } from './AudioEngine'
  *  - measures raw scroll velocity and smooths it (fast attack, slow release),
  *    so acceleration follows the visitor's hand and decays naturally at rest;
  *  - publishes the smoothed value to the 3D world (S.scrollVelocity);
- *  - forwards the timeline's audio mix plus velocity to the engine;
+ *  - tells the engine whether the music should play (in the film, before the hackathon title);
  *  - plays a soft whoosh on each dip-to-black.
  * No sound is ever retriggered per scroll event.
  */
@@ -39,18 +39,14 @@ export function AudioController() {
 
       if (!flagStore.get().ignited) return
 
-      // fade the score out once the visitor has moved on into the event page
-      let beyond = 1
-      if (storyTrigger) beyond = Math.max(0, 1 - (y - storyTrigger.end) / (window.innerHeight * 1.4))
-
-      audio.update({
-        rpm: S.mix.rpm,
-        engine: S.mix.engine * beyond,
-        muffle: S.mix.muffle,
-        road: S.mix.road * beyond,
-        future: S.mix.future * beyond,
-        velocity: smoothed * beyond,
-      })
+      // the music plays through the film and fades out as the hackathon name appears (units 95.2 → 96.6);
+      // scrolling back up into the film brings it back
+      let presence = 1
+      if (storyTrigger) {
+        const unit = storyTrigger.progress * 100
+        presence = 1 - Math.min(1, Math.max(0, (unit - 95.2) / 1.4))
+      }
+      audio.update({ presence })
 
       if (S.dip > 0.6 && lastDip <= 0.6 && now - lastWhoosh > 700) {
         audio.whoosh(0.8 + smoothed * 0.6)
