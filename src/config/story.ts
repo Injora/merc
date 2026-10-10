@@ -71,8 +71,10 @@ export const CAPTIONS: Caption[] = [
   { id: 'opt-note', line: 'Search → evaluate → optimize', from: 70, to: 75.4, size: 'note' },
   { id: 'opt', kicker: 'V — Optimization', line: 'Don’t just build the machine. Improve the system.', from: 73, to: 76.6, align: 'center', size: 'title', pos: 'top' },
   { id: 'ai', kicker: 'VI — AI systems', line: 'Predictions inform decisions.', from: 77, to: 81.6, align: 'left', pos: 'bottom' },
-  { id: 'platform', line: 'The machine is the platform. Builders expand what it can do.', from: 83.2, to: 85.8, align: 'center', pos: 'top' },
-  { id: 'tenfold', line: 'What if your code made it 10× better?', from: 86, to: 88.4, align: 'center', size: 'title', pos: 'top' },
-  { id: 'breakthrough', line: 'The next breakthrough won’t build itself.', from: 88.5, to: 90.6, align: 'center', size: 'title', pos: 'top' },
+  // the 10× beats: the platform line beside the car while the paint returns; the headline only once the car
+  // has settled into the lower third, in the negative space the camera opens above it
+  { id: 'platform', line: 'The machine is the platform. Builders expand what it can do.', from: 84.1, to: 85.55, align: 'left', pos: 'bottom' },
+  { id: 'tenfold', line: 'What if your code made it 10× better?', from: 86.8, to: 89.2, align: 'center', size: 'title', pos: 'top' },
+  { id: 'breakthrough', line: 'The next breakthrough won’t build itself.', from: 89.3, to: 91, align: 'center', size: 'title', pos: 'top' },
   { id: 'bridge', line: 'Bridge engineering and intelligence. Build what’s next.', from: 92.2, to: 95.4, align: 'center', pos: 'top' },
 ]

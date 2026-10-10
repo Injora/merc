@@ -79,9 +79,6 @@ export const S = {
   },
 
 
-  /* audio mix, also scrubbed by the timeline */
-  mix: { engine: 0.55, muffle: 0, road: 0, future: 0, rpm: 0.12 },
-
   /* derived at runtime */
   frame: 0, // rendered WebGL frames (used by the screenshot tooling to wait for fresh frames)
   scrollVelocity: 0, // smoothed, 0 → ~1

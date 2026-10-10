@@ -18,6 +18,7 @@ URL flags (any build):
 
 - `?static` forces the still (reduced-motion) film.
 - `?probe` records per-frame emblem, camera and highlight data.
+- `?gpu` records per-frame GPU time; `?no=shards,cube,glass,fx,txhalf` switches a suspect off (performance investigation; see `src/lib/gpuprof.ts`).
 - `?nocar` makes the car model fail to load; add `&noseq` to fail its turntable frames too.
 
 Dev only:
@@ -102,7 +103,7 @@ Everything is self-hosted; **`public/ASSET_LICENSES.md`** is the manifest. Slots
 | `models.car` | The car GLB (now a Mercedes-AMG C 63 Coupé; **licence unconfirmed**, see the manifest) and `tech`, its baked digital twin |
 | `models.emblem` | An optional sponsor emblem GLB |
 | `sequences.car` | A 60-frame turntable plus an SVG outline, rendered from the car: the fallback and the still film |
-| `audio.*` | Optional recorded layers; otherwise the audio is synthesised live |
+| `audio.click` · `audio.engineStart` · `audio.music` | `music` is `/audio/bgm.mp3`; click and engine are synthesised unless a file is supplied (see **Sound** below) |
 
 **Replacing the car:**
 
@@ -125,21 +126,69 @@ Everything is self-hosted; **`public/ASSET_LICENSES.md`** is the manifest. Slots
 |---|---|
 | `node scripts/capture.mjs --phase x --units 32,49.5,72,98.5 [--vp mobile] [--button] [--cta] [--video]` | Real ignition and real scrolling. Saves screenshots, logs console errors and failed requests. `--video` records a 60 s journey. |
 | `node scripts/trace60.mjs --label run [--vp mobile] [--bands 0-8,…]` | A 60 s continuous scroll. Reports fps, frame intervals, dropped frames and main-thread work per chapter, plus a Chrome trace. |
+| `node scripts/gpu-range.mjs [--no shards,cube,glass,fx,txhalf] [--passes 3]` | One scroll range (default units 6 → 34), repeated: dropped frames, frame intervals and GPU time per band, with each suspect switchable off (`?gpu&no=…`, any build) |
 | `node scripts/verify-emblem.mjs --out shots/emblem` | 30 consecutive frames of the star (sweep and rest) |
 | `node scripts/verify-jitter.mjs` | 60 frames at rest per chapter: camera, emblem, caption and rail stability |
 | `node scripts/test-ignition-keyboard.mjs` | Keyboard ignition, and that it cannot fire twice |
 
-### Results (Apple M4, Chrome, 60 Hz, `trace60.mjs`, 60 s scroll through the whole film)
+### Results (Apple M4, Chrome, 60 Hz, production preview)
+
+**Whole film** (`trace60.mjs`, 60 s scroll, units 0 → 100):
 
 | | Desktop 1440×900 @2× | Mobile 390×844 @3× |
 |---|---|---|
-| Units 40–100 (all the CS / ML / CV / AI chapters) | 60 fps, 0 dropped, in all three runs | 60 fps, 0 dropped |
-| Units 8–33 (shards → car → twin) | **varies run to run:** 239, 35, then 0 dropped frames in three identical runs | 0 dropped |
-| Whole film | 56.1 → 59.4 → 60.0 fps across the three runs | 60 fps; 3 single missed frames in the finale |
+| Run 1 | 60 fps, **0 dropped / 3,727**, every chapter | 60 fps, 2 dropped / 3,722 (finale, single 33 ms frames) |
+| Run 2 | 60 fps, **0 dropped / 3,723** | — |
+| Run 3 | 60 fps, **0 dropped / 3,725** | — |
 
-Main-thread work stays at p95 ≤ 5 ms per chapter in every run, so when frames drop in the studio stretch, the limit is the GPU (or system load), not JavaScript. That stretch has the thinnest headroom: a transmission-glass car, 1,800 chrome shards and a re-rendering reflection cube. A 120 Hz display is untested.
+Main-thread rAF work p95 is 1.6–3.9 ms per chapter. Shader compiles across 0–100: none (`check-compiles.mjs` prints `[]`).
 
-Emblem: 30 frames during the sweep and 30 at rest, with position and rotation range 0. At rest in ten chapters, the camera, captions and rail move by exactly 0 between frames.
+**The opening (units 6–34): investigation.** An earlier report had 239, 35 and 0 dropped frames in three identical runs. `scripts/gpu-range.mjs` measures each frame's GPU time with `EXT_disjoint_timer_query_webgl2` and can switch each suspect off (`?gpu&no=…`):
+
+| Switched off | GPU p50, units 16–23 |
+|---|---|
+| nothing (baseline) | 24–26 ms |
+| reflection cube | ~24 ms (it re-renders only ~60 times in 8–16) |
+| 1,800 shards | ~24 ms (no measurable cost) |
+| car glass transmission | ~13 ms |
+| post-processing | ~10 ms |
+
+ANGLE/Metal timer values include pipelined work, so they exceed the 16.7 ms frame interval; compare them only with each other.
+
+The transmission pass rendered a full-resolution, 4× MSAA, half-float, mipmapped copy of the scene every frame. It now renders at half resolution (`gl.transmissionResolutionScale = 0.5`), which looks the same through the dark tinted glass (RMSE 0.6–1.9 % on the largest close-ups).
+
+**Before / after, same build, alternating runs, idle background** (`?no=txhalf` restores the old pass), GPU p50:
+
+| | Units 16–23 | Units 23–27.5 | Dropped frames |
+|---|---|---|---|
+| Before | 24.2–25.8 ms | 26.5–26.9 ms | 0 in 6 passes |
+| After | 15.9–19.4 ms | 18.3–18.6 ms | 0 in 6 passes |
+
+**What caused the inconsistent drops: background GPU load, not the page.** During one profiling run, every band slowed by 3–4×, including the unchanged star at units 6–8 (44 ms against 11 ms), and it recovered pass by pass. At that moment a Chrome tab outside the test, connected to the dev server, had its renderer and GPU process busy (25–44 % CPU). That tab was rendering the film on the same GPU. Whenever that background load was idle (sampled before and after every run), all passes were clean. The transmission change roughly doubles the opening's GPU headroom, so the page tolerates such load better, but the earlier variance was not a page defect.
+
+Emblem, 30 frames during its sweep and 30 at rest: position and rotation range 0. At rest in eleven chapters, the camera, captions and rail move by exactly 0 between frames.
+
+## Sound
+
+Nothing plays before the visitor presses START ENGINE (`src/audio/`).
+
+- **Engine, once:** START ENGINE plays the starter crank, the catch and a short rev (synthesised). It fades out as the star appears (≈ 2 s) and never returns.
+- **Music:** `public/audio/bgm.mp3` (`ASSETS.audio.music`), looped.
+  - It starts as soon as the engine has died away and the star is on screen (≈ 2.9 s after the click, 1.6 s fade-in).
+  - It plays under the film and fades out as the hackathon name appears (units 95.2 → 96.6). It stays off on the title and the event page; scrolling back up into the film brings it back.
+  - Its level relative to the engine is `MUSIC_LEVEL` in `src/audio/AudioEngine.ts`.
+- **Whoosh** on scene cuts. Hidden tabs suspend audio.
+- **Sound control (bottom right):** the bars toggle mute; the slider beside them sets the overall volume (output gain follows volume²). On desktop the slider opens on hover or keyboard focus; on touch screens it is always shown. It starts at 80 %, sliding to 0 mutes, and volume and mute are remembered (`localStorage`). It is keyboard operable (arrow keys, Home/End).
+
+Measured on the production build (`node scripts/audio-check.mjs`, output tap):
+
+| | Level |
+|---|---|
+| Engine, from 0.5 s, default volume | ≈ −13 dBFS RMS |
+| Engine at 3.5 s | gone (−56 dBFS) |
+| Music, from ≈ 3.3 s, default volume (80 %) | ≈ −24 dBFS RMS (−41 at 30 %, −19 at 100 %) |
+| Hackathon title and event page | silence |
+| Back in the film | the music returns |
 
 ## Accessibility
 
