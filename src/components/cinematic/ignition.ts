@@ -46,7 +46,7 @@ export function ignite() {
     .set(S, { revealed: 1 }, 1.98)
     .to(S, { morph: 1, duration: 2.3, ease: 'back.out(1.25)' }, 2.0)
     .to(S, { ignCamZ: 0, duration: 2.8, ease: 'power3.inOut' }, 1.9)
-    .to(S, { horizon: 0.18, duration: 1.6, ease: 'power2.inOut' }, 2.8)
+    .to(S, { horizon: 0, duration: 1.6, ease: 'power2.inOut' }, 2.8)
     .to(S, { pressed: 0, duration: 0.4 }, 2.4)
 
   // once the star has settled: one deliberate studio sweep across its facets (separate
@@ -58,7 +58,7 @@ export function ignite() {
 /** Jump to the settled post-ignition state (star on screen, scrolling unlocked). */
 export function completeIgnition() {
   if (!flagStore.get().ignited) {
-    gsap.set(S, { intro: 1, ign: 1, revealed: 1, morph: 1, ignCamZ: 0, pressed: 0, horizon: 0.18, gauge: 0 })
+    gsap.set(S, { intro: 1, ign: 1, revealed: 1, morph: 1, ignCamZ: 0, pressed: 0, horizon: 0, gauge: 0 })
     flagStore.set({ ignited: true })
   }
   lockScroll(false)
