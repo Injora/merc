@@ -9,9 +9,9 @@ export function HeroContent({ headingLevel = 'h2' }: { headingLevel?: 'h1' | 'h2
   return (
     <div className="hero">
       <p className="hero-presents">
-        <span>{EVENT.organizer.short.text}</span>
+        <span className="hero-index">11</span>
         <span className="hero-presents-rule" aria-hidden />
-        <span>presents</span>
+        <span>{EVENT.organizer.short.text} presents</span>
       </p>
       <H className="hero-title">
         <Info c={EVENT.name} />
