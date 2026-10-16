@@ -165,6 +165,10 @@ code {
   transform: translate(2px, -2px);
 }
 
+.btn:has(svg.lucide-arrow-down):hover svg {
+  transform: translateY(3px);
+}
+
 .btn:active {
   transform: scale(0.98);
 }
@@ -924,6 +928,15 @@ code {
   opacity: 0;
 }
 
+.story-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 65% 55% at 50% 50%, rgba(5, 5, 6, 0.85) 0%, rgba(5, 5, 6, 0.45) 55%, transparent 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
 .scroll-cue {
   position: absolute;
   left: 50%;
@@ -1190,6 +1203,7 @@ code {
 /* ── Hero (end of film / static) ──────────────────────────────────────── */
 
 .hero {
+  position: relative;
   display: grid;
   justify-items: center;
   gap: 0;
@@ -1200,17 +1214,22 @@ code {
 .hero-presents {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  margin: 0 0 28px;
+  gap: 16px;
+  margin: 0 0 24px;
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.32em;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
 
+.hero-index {
+  color: var(--silver-hi);
+  font-weight: 500;
+}
+
 .hero-presents-rule {
-  width: 34px;
+  width: 36px;
   height: 1px;
   background: var(--line-strong);
 }
@@ -1218,11 +1237,11 @@ code {
 .hero-title {
   margin: 0;
   font-family: var(--font-sans);
-  font-weight: 250;
-  font-size: clamp(2.6rem, 8.4vw, 7.6rem);
-  line-height: 0.95;
-  letter-spacing: -0.035em;
-  background: linear-gradient(180deg, #ffffff 10%, #c3c8ce 60%, #8d939a 100%);
+  font-weight: 280;
+  font-size: clamp(2.4rem, 6.8vw, 6.2rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  background: linear-gradient(180deg, #ffffff 15%, #dce0e5 60%, var(--silver) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1230,47 +1249,56 @@ code {
 
 .hero-title .tba-badge {
   font-size: 10px;
-  vertical-align: 1.6em;
+  vertical-align: middle;
+  margin-left: 0.45em;
   -webkit-text-fill-color: var(--text-dim);
 }
 
 .hero-title.tba,
 .hero-title .tba {
-  text-decoration-color: rgba(255, 255, 255, 0.25);
-  text-decoration-thickness: 2px;
+  text-decoration-color: rgba(255, 255, 255, 0.22);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.12em;
 }
 
 .hero-headline {
-  margin: 34px 0 0;
+  margin: 28px 0 0;
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 300;
-  font-size: clamp(1.5rem, 2.8vw, 2.4rem);
-  line-height: 1.15;
-  color: #f2efe9;
+  font-size: clamp(1.4rem, 2.4vw, 2.2rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #f5f3ef;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
 }
 
 .hero-support {
-  margin: 12px 0 0;
-  max-width: 44ch;
+  margin: 14px 0 0;
+  max-width: 48ch;
   color: var(--text-dim);
   font-size: 15px;
+  line-height: 1.6;
   letter-spacing: 0.01em;
+  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.5);
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 14px;
-  margin-top: 40px;
+  align-items: center;
+  gap: 16px;
+  margin-top: 36px;
 }
 
 .hero-sponsor {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  margin: 46px 0 0;
+  gap: 12px;
+  margin: 36px 0 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
   font-size: 13px;
   letter-spacing: 0.04em;
   color: var(--text-dim);
@@ -1872,6 +1900,10 @@ code {
   overflow: hidden;
 }
 
+.static-hero {
+  background: radial-gradient(60% 50% at 50% 50%, #0c0f14, #000 85%);
+}
+
 .static-open {
   align-content: center;
   justify-items: center;
@@ -2169,15 +2201,23 @@ code {
     grid-template-columns: minmax(0, 1fr);
     gap: 6px;
   }
+  .story-hero {
+    padding: 80px var(--gutter) 48px;
+  }
   .hero-actions {
     flex-direction: column;
     align-items: stretch;
     width: 100%;
     max-width: 320px;
+    gap: 12px;
+    margin-top: 28px;
   }
   .hero-sponsor {
     flex-direction: column;
     gap: 10px;
+    margin-top: 28px;
+    padding-top: 18px;
+    font-size: 12px;
   }
   /* on phones the production notes move up under the nav, clear of the captions */
   .asset-notes {
